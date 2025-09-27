@@ -22,8 +22,12 @@ app.get("/", (req: Request, res: Response) => {
 
 app.get("/health", (req, res) => res.status(200).send("ok"))
 
-app.get("/hostname", (req: Request, res: Response) => {
-  res.send(os.hostname())
+app.get("/host", (req: Request, res: Response) => {
+  res.json({
+    hostname: os.hostname(),
+    platform: os.platform(),
+    uptime: os.uptime()
+  })
 })
 
 // Catch uncaught exceptions
