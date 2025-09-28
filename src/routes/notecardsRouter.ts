@@ -3,8 +3,9 @@ import axios from "axios"
 
 const router = Router()
 
-// Base URL for the notecards API inside the same EC2
-const NOTECARDS_API_BASE = "http://localhost:3001"
+// Decide base URL from env (set inside Docker) or fallback to localhost
+const NOTECARDS_API_BASE =
+  process.env.NOTECARDS_BASE || "http://localhost:3001"
 
 // Proxy all requests under /notecards-api/*
 router.use("/", async (req: Request, res: Response) => {
