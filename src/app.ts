@@ -3,6 +3,7 @@ import morgan from "morgan"
 import cors from "cors"
 import helmet from "helmet"
 import os from "os"
+import notecardsRouter from "./routes/notecardsRouter"
 
 const NODE_ENV = process.env.NODE_ENV
 const app: Express = express()
@@ -14,6 +15,7 @@ const morganOption: string = (NODE_ENV === "production") ? "tiny" : "common"
 app.use(morgan(morganOption)) // Type declaration for morgan
 app.use(cors())
 app.use(helmet())
+app.use(express.json())
 
 // Routes
 app.get("/", (req: Request, res: Response) => {
@@ -22,13 +24,15 @@ app.get("/", (req: Request, res: Response) => {
 
 app.get("/health", (req, res) => res.status(200).send("ok"))
 
-app.get("/host", (req: Request, res: Response) => {
+app.get("/gateway-info", (req: Request, res: Response) => {
   res.json({
     hostname: os.hostname(),
     platform: os.platform(),
     uptime: os.uptime()
   })
 })
+
+app.use("/notecards-api", notecardsRouter)
 
 // Catch uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
