@@ -4,6 +4,7 @@ import cors from "cors"
 import helmet from "helmet"
 import os from "os"
 import notecardsRouter from "./routes/notecardsRouter"
+import portfolioRouter from "./routes/portfolioRouter"
 
 const NODE_ENV = process.env.NODE_ENV
 const app: Express = express()
@@ -31,6 +32,8 @@ app.get("/gateway-info", (req: Request, res: Response) => {
     uptime: os.uptime()
   })
 })
+
+app.use("/portfolio-api", portfolioRouter)
 
 app.use("/notecards-api", notecardsRouter)
 
