@@ -4,7 +4,7 @@ import axios from "axios"
 const router = Router()
 
 const PORTFOLIO_API_BASE =
-  process.env.NOTECARDS_BASE || "http://localhost:3002"
+  process.env.PORTFOLIO_BASE || "http://localhost:3002"
 
 router.use("/", async (req: Request, res: Response) => {
   try {
