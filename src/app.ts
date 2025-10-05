@@ -1,7 +1,7 @@
 import express, { Express, NextFunction, Request, Response } from "express"
 import morgan from "morgan"
 import cors from "cors"
-import helmet from "helmet"
+//import helmet from "helmet"
 import os from "os"
 import notecardsRouter from "./routes/notecardsRouter"
 import portfolioRouter from "./routes/portfolioRouter"
@@ -15,7 +15,7 @@ const morganOption: string = (NODE_ENV === "production") ? "tiny" : "common"
 // Middleware
 app.use(morgan(morganOption)) // Type declaration for morgan
 app.use(cors())
-app.use(helmet())
+//app.use(helmet())
 app.use(express.json())
 
 // Routes
