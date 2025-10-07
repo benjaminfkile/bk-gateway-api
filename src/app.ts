@@ -41,6 +41,7 @@ for (const [prefix, target] of Object.entries(API_MAP)) {
     createProxyMiddleware({
       target,
       changeOrigin: true,
+      ws: true,
       pathRewrite: (path) => path.replace(prefix, ""),
       proxyTimeout: 60000,
     })
