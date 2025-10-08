@@ -60,4 +60,9 @@ jobs:
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
             --strategy Rolling \
-            --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 120}'
+            --preferences '{
+              "MinHealthyPercentage": 100,
+              "InstanceWarmup": 300,
+              "SkipMatching": false
+            }'
+
