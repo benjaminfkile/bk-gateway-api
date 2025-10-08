@@ -55,38 +55,9 @@ jobs:
           echo "Waiting for cancel... current status: $STATUS"
           sleep 10
           done
-
-
       - name: Start new instance refresh
-        id: refresh
         run: |
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
             --strategy Rolling \
-            --preferences '{
-              "MinHealthyPercentage": 100,
-              "InstanceWarmup": 1000,
-              "SkipMatching": false
-            }'
-
-      - name: Wait for instance refresh to finish
-        run: |
-          while true; do
-            STATUS=$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name "${{ secrets.ASG_NAME }}" \
-              --query 'InstanceRefreshes[0].Status' --output text)
-
-            echo "Current refresh status: $STATUS"
-
-            if [ "$STATUS" = "Successful" ]; then
-              echo "Instance refresh completed successfully."
-              break
-            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ]; then
-              echo "Instance refresh failed or was cancelled."
-              exit 1
-            fi
-
-            sleep 30
-          done
-
-
+            --preferences '{"MinHealthyPercentage": 100, "InstanceWarmup": 400}'
