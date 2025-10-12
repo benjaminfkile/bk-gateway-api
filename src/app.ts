@@ -29,10 +29,9 @@ app.get("/gateway-info", (req, res) => {
 
 // API maps
 const API_MAP: Record<string, string> = {
-  "/users-api": process.env.USERS_BASE || "http://localhost:3010",
-  "/bengrok-tunnel": process.env.BENGROK_BASE || "http://localhost:3003",
+  "/users-api": process.env.USERS_BASE || "http://localhost:3001",
   "/portfolio-api": process.env.PORTFOLIO_BASE || "http://localhost:3002",
-  "/notecards-api": process.env.NOTECARDS_BASE || "http://localhost:3001",
+  "/bengrok-tunnel": process.env.BENGROK_BASE || "http://localhost:3003"
 };
 
 // Proxies
