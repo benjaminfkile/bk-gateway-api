@@ -13,7 +13,7 @@ const morganOption = NODE_ENV === "production" ? "tiny" : "common";
 app.use(morgan(morganOption));
 app.use(cors());
 app.use(express.json());
-app.use(helmet())
+app.use(helmet());
 
 app.get("/", (req, res) => res.send("/"));
 
@@ -29,6 +29,7 @@ app.get("/gateway-info", (req, res) => {
 
 // API maps
 const API_MAP: Record<string, string> = {
+  "/users-api": process.env.BENGROK_BASE || "http://localhost:3010",
   "/bengrok-tunnel": process.env.BENGROK_BASE || "http://localhost:3003",
   "/portfolio-api": process.env.PORTFOLIO_BASE || "http://localhost:3002",
   "/notecards-api": process.env.NOTECARDS_BASE || "http://localhost:3001",
