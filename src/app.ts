@@ -31,7 +31,7 @@ app.get("/gateway-info", (req, res) => {
 const API_MAP: Record<string, string> = {
   "/portfolio-api": process.env.PORTFOLIO_BASE || "http://localhost:3001",
   "/bengrok-tunnel": process.env.BENGROK_BASE || "http://localhost:3002",
-  "/wmsfo-api": process.env.BENGROK_BASE || "http://localhost:3002",
+  "/wmsfo-api": process.env.WMSFO_BASE || "http://localhost:3003",
 };
 
 // Proxies
