@@ -4,6 +4,8 @@ import cors from "cors";
 import helmet from "helmet";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import os from "os";
+import { serviceMap } from "./config/serviceMap";
+import healthRouter from "./routers/healthRouter";
 
 const app = express();
 
@@ -17,9 +19,9 @@ app.use(helmet());
 
 app.get("/", (req, res) => res.send("/"));
 
-app.get("/health", (req, res) => res.status(200).send("ok"));
+app.use("/api/health", healthRouter);
 
-app.get("/gateway-info", (req, res) => {
+app.get("/api/gateway-info", (req, res) => {
   res.json({
     hostname: os.hostname(),
     platform: os.platform(),
@@ -27,25 +29,18 @@ app.get("/gateway-info", (req, res) => {
   });
 });
 
-// API maps
-const API_MAP: Record<string, string> = {
-  "/portfolio-api": process.env.PORTFOLIO_BASE || "http://localhost:3001",
-  "/bengrok-tunnel": process.env.BENGROK_BASE || "http://localhost:3002",
-  "/wmsfo-api": process.env.WMSFO_BASE || "http://localhost:3003",
-};
-
 // Proxies
-for (const [prefix, target] of Object.entries(API_MAP)) {
+for (const [name, { url }] of Object.entries(serviceMap)) {
   app.use(
-    prefix,
+    `/${name}`,
     createProxyMiddleware({
-      target,
+      target: url,
       changeOrigin: true,
       ws: true,
-      pathRewrite: (path) => path.replace(prefix, ""),
+      pathRewrite: (path) => path.replace(new RegExp(`^/${name}`), ""),
       proxyTimeout: 60000,
     })
   );
 }
 
-export default app;//bump
+export default app;
