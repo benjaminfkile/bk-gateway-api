@@ -16,9 +16,15 @@ healthRouter.route("/").get(async (req: Request, res: Response) => {
     const start = Date.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
+    console.log(name)
 
     try {
-      const response = await fetch(`${url}/api/health`, { signal: controller.signal });
+      const target =
+        process.env.IS_LOCAL === "true"
+          ? `${url}/api/health` // local dev → direct to port
+          : `http://localhost/${name}/api/health`; // AWS → through proxy
+
+      const response = await fetch(target, { signal: controller.signal });
       const data = await response.json().catch(() => ({}));
       const duration = Date.now() - start;
 
