@@ -6,15 +6,15 @@ export interface ServiceDefinition {
 }
 
 export const serviceMap: Record<string, ServiceDefinition> = {
-  portfolio: {
+  "portfolio-api": {
     url: "http://portfolio-api:3001",
     includeInHealthCheck: true,
   },
-  bengrok: {
+  "bengrok-api": {
     url: "http://bengrok-api:3002",
     includeInHealthCheck: false,
   },
-  wmsfo: {
+  "wmsfo-api": {
     url: "http://wmsfo-api:3003",
     includeInHealthCheck: true,
   },
