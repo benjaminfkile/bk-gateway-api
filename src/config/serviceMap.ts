@@ -7,18 +7,17 @@ export interface ServiceDefinition {
 
 export const serviceMap: Record<string, ServiceDefinition> = {
   portfolio: {
-    url: "http://localhost:3001",
+    url: "http://portfolio-api:3001",
     includeInHealthCheck: true,
   },
   bengrok: {
-    url: "http://localhost:3002",
+    url: "http://bengrok-api:3002",
     includeInHealthCheck: false,
   },
   wmsfo: {
-    url: "http://localhost:3003",
+    url: "http://wmsfo-api:3003",
     includeInHealthCheck: true,
   },
-
 };
 
 export type ServiceName = keyof typeof serviceMap;

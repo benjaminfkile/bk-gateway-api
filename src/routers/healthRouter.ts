@@ -16,7 +16,6 @@ healthRouter.route("/").get(async (req: Request, res: Response) => {
     const start = Date.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    console.log(name)
 
     try {
 
