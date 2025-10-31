@@ -24,16 +24,24 @@ jobs:
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
             | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-      - name: Build & Push Docker image
+      - name: Build & Push multi-arch Docker image
         run: |
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}
           GIT_SHA=$(git rev-parse --short HEAD)
 
+          # Create a multi-arch builder if not already present
+          docker buildx create --use || true
+          docker buildx inspect --bootstrap
+
+          # Build for both architectures and push to ECR
           docker buildx build \
-            --platform linux/amd64 \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
+            --build-arg AWS_SECRET_ARN=${{ secrets.AWS_SECRET_ARN }} \
             -t $IMAGE_URI:$GIT_SHA \
             -t $IMAGE_URI:latest \
             --push .
+
 
       - name: Cancel any existing instance refresh
         run: |
