@@ -30,7 +30,7 @@ app.get("/api/gateway-info", (req, res) => {
   });
 });
 
-// Proxy setup (TypeScript-safe)
+
 for (const [name, { url }] of Object.entries(serviceMap)) {
   const proxyConfig: Options = {
     target: url,
@@ -39,7 +39,6 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
     pathRewrite: (path) => path.replace(new RegExp(`^/${name}`), ""),
     proxyTimeout: 60000,
 
-    // The real fix for POST/PUT/DELETE with JSON
     //@ts-ignore
     onProxyReq: (proxyReq, req, _res) => {
       if (
