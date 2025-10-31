@@ -1,9 +1,9 @@
-
 import dotenv from "dotenv"
-import app from "./src/app"
-
 // Configuring dotenv
 dotenv.config()
+import app from "./src/app"
+
+
 
 // Getting the PORT from environment variables
 const PORT = process.env.PORT || 3000

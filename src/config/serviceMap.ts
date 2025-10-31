@@ -1,23 +1,19 @@
-// Central map of internal services for the Gateway API
 
-export interface ServiceDefinition {
-  url: string;
-  includeInHealthCheck: boolean;
-}
+const isLocal = process.env.IS_LOCAL === "true";
 
-export const serviceMap: Record<string, ServiceDefinition> = {
+console.log("islocal", isLocal)
+
+export const serviceMap: Record<string, { url: string; includeInHealthCheck: boolean }> = {
   "portfolio-api": {
-    url: "http://portfolio-api:3001",
+    url: isLocal ? "http://localhost:3001" : "http://portfolio-api:3001",
     includeInHealthCheck: true,
   },
   "bengrok-api": {
-    url: "http://bengrok-api:3002",
+    url: isLocal ? "http://localhost:3002" : "http://bengrok-api:3002",
     includeInHealthCheck: false,
   },
   "wmsfo-api": {
-    url: "http://wmsfo-api:3003",
+    url: isLocal ? "http://localhost:3003" : "http://wmsfo-api:3003",
     includeInHealthCheck: true,
   },
 };
-
-export type ServiceName = keyof typeof serviceMap;
