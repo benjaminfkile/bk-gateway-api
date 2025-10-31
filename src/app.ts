@@ -6,18 +6,18 @@ import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import os from "os";
 import { serviceMap } from "./config/serviceMap";
 import healthRouter from "./routers/healthRouter";
+import { isLocal } from "./utils/isLocal";
 
 const app = express();
 
-const NODE_ENV = process.env.NODE_ENV;
-const morganOption = NODE_ENV === "production" ? "tiny" : "common";
+if (isLocal()) {
+  app.use(morgan("dev"));
+}
 
-app.use(morgan(morganOption));
 app.use(cors());
 app.use(helmet());
 
 // Don't parse JSON before proxy
-// app.use(express.json());
 
 app.get("/", (req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
@@ -29,7 +29,6 @@ app.get("/api/gateway-info", (req, res) => {
     uptime: os.uptime(),
   });
 });
-
 
 for (const [name, { url }] of Object.entries(serviceMap)) {
   const proxyConfig: Options = {
