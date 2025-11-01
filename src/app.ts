@@ -1,7 +1,10 @@
+// src/app.ts
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
+import http from "http";
+import https from "https";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import os from "os";
 import { serviceMap } from "./config/serviceMap";
@@ -10,19 +13,20 @@ import { isLocal } from "./utils/isLocal";
 
 const app = express();
 
-if (isLocal()) {
-  app.use(morgan("dev"));
-}
+// Lightweight console logging only in local
+if (isLocal()) app.use(morgan("tiny"));
 
+// Minimal security headers
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
-app.use(helmet());
 
-// Don't parse JSON before proxy
+// Don't use express.json() before proxy; only after
+// proxies to avoid reading + buffering every body.
 
-app.get("/", (req, res) => res.send("/"));
+app.get("/", (_req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
 
-app.get("/api/gateway-info", (req, res) => {
+app.get("/api/gateway-info", (_req, res) => {
   res.json({
     hostname: os.hostname(),
     platform: os.platform(),
@@ -30,22 +34,30 @@ app.get("/api/gateway-info", (req, res) => {
   });
 });
 
+// Keep-alive agents reused by all proxies
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 1000 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 1000 });
+
+// Create proxies for all microservices
 for (const [name, { url }] of Object.entries(serviceMap)) {
   const proxyConfig: Options = {
     target: url,
     changeOrigin: true,
     ws: true,
-    pathRewrite: (path) => path.replace(new RegExp(`^/${name}`), ""),
+    agent: url.startsWith("https") ? httpsAgent : httpAgent,
     proxyTimeout: 60000,
-
+    timeout: 60000,
+    //@ts-ignore
+    compress: false, // Disable re-compression
     //@ts-ignore
     onProxyReq: (proxyReq, req, _res) => {
+      // Avoid unnecessary buffering for GET/HEAD
       if (
         req.method === "POST" ||
         req.method === "PUT" ||
         req.method === "PATCH"
       ) {
-        if (req.body) {
+        if (req.body && Object.keys(req.body).length) {
           const bodyData = JSON.stringify(req.body);
           proxyReq.setHeader("Content-Type", "application/json");
           proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
@@ -53,12 +65,14 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
         }
       }
     },
+    pathRewrite: (path) => path.replace(new RegExp(`^/${name}`), ""),
+    logLevel: isLocal() ? "debug" : "warn",
   };
 
   app.use(`/${name}`, createProxyMiddleware(proxyConfig));
 }
 
-// Now parse JSON for local routes
+// Parse JSON only for non-proxied local routes
 app.use(express.json());
 
 export default app;
