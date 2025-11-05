@@ -22,8 +22,10 @@ export const serviceMap: Record<
     const devUrl = local ? `http://localhost:${devPort}` : `http://${name}-dev:${devPort}`;
 
     return [
+      // normal service
       [name, { url: normalUrl, includeInHealthCheck }],
-      [`${name}-dev`, { url: devUrl, includeInHealthCheck }],
+      // dev variant (excluded from health check)
+      [`${name}-dev`, { url: devUrl, includeInHealthCheck: false }],
     ];
   })
 );
