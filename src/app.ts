@@ -8,8 +8,9 @@ import https from "https";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import os from "os";
 import { serviceMap } from "./config/serviceMap";
-import healthRouter from "./routers/healthRouter";
 import { isLocal } from "./utils/isLocal";
+import healthRouter from "./routers/healthRouter";
+import leaderRouter from "./routers/leaderRouter";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use(cors());
 
 app.get("/", (_req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
+app.use("/api/leader", leaderRouter)
 
 app.get("/api/gateway-info", (_req, res) => {
   res.json({
