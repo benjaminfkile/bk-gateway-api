@@ -1,43 +1,50 @@
 import ec2Launch from "../db/ec2Launch";
 import ec2HeartbeatService from "./ec2HeartbeatService";
+import leaderElectionService from "./leaderElectionService";
 
 const ec2LaunchService = {
+  /**
+   * Start this EC2 instance in the cluster and initialize leader election.
+   */
   async startInstance(uniqueInstanceId: string) {
-    let record = await ec2Launch.getByInstanceId(uniqueInstanceId);
+    console.log(`[Launch] Initializing EC2 instance ${uniqueInstanceId}...`);
 
-    if (!record) {
-      record = await ec2Launch.insert(uniqueInstanceId);
-      console.log(`[Launch] Recorded EC2 instance: ${uniqueInstanceId}`);
-    } else {
-      console.log(`[Launch] Instance already recorded: ${uniqueInstanceId}`);
-    }
+    // 🔹 Register and start leader election service (handles insert + heartbeat + election)
+    await leaderElectionService.init(uniqueInstanceId);
 
-    // 🔹 First heartbeat happens synchronously to confirm FK validity
-    try {
-      await ec2HeartbeatService.record(uniqueInstanceId);
-      console.log(`[Launch] Initial heartbeat OK for ${uniqueInstanceId}`);
-    } catch (err) {
-      console.error(`[Launch] Initial heartbeat failed, retrying...`, err);
-      await new Promise((r) => setTimeout(r, 1000));
-      await ec2HeartbeatService.record(uniqueInstanceId);
-    }
+    // 🔹 Grab current election state
+    const { isLeader, leaderId, instanceId } = leaderElectionService.getState();
 
-    // 🔹 Once initial heartbeat is successful, start loop
-    ec2HeartbeatService.startHeartbeatLoop(uniqueInstanceId);
+    console.log(
+      `[Launch] Instance ${instanceId} started. Leader: ${leaderId} (isLeader=${isLeader})`
+    );
 
-    return record;
+    return { isLeader, leaderId, instanceId };
   },
 
+  /**
+   * Stop this EC2 instance and clean up related data.
+   */
   async stopInstance(uniqueInstanceId: string) {
-    console.log(`[Shutdown] Deleting EC2 instance: ${uniqueInstanceId}`);
+    console.log(`[Shutdown] Stopping EC2 instance: ${uniqueInstanceId}`);
     await ec2HeartbeatService.stopHeartbeatLoop(uniqueInstanceId);
     await ec2Launch.delete(uniqueInstanceId);
+
+    console.log(
+      `[Shutdown] Instance ${uniqueInstanceId} removed from registry.`
+    );
   },
 
+  /**
+   * Get all EC2 launches.
+   */
   async getLaunches() {
     return ec2Launch.getAll();
   },
 
+  /**
+   * Get a specific EC2 launch record.
+   */
   async getLaunch(uniqueInstanceId: string) {
     return ec2Launch.getByInstanceId(uniqueInstanceId);
   },
