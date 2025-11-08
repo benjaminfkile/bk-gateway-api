@@ -74,11 +74,6 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
   app.use(`/${name}`, createProxyMiddleware(proxyConfig));
 }
 
-// console.log("*******************************************")
-// console.log(serviceMap)
-// console.log("*******************************************")
-
-
 // Parse JSON only for non-proxied local routes
 app.use(express.json());
 

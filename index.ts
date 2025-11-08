@@ -12,17 +12,18 @@ import { isLocal } from "./src/utils/isLocal";
 import ec2LaunchService from "./src/services/ec2LaunchService";
 import ec2CleanupService from "./src/services/ec2CleanupService";
 import instanceService from "./src/services/instanceService";
+import { initLogger, log } from "./src/utils/logger";
 
 const port = parseInt(process.env.PORT ?? "3000");
 
 process.on("uncaughtException", (err) => {
-  console.error("[Fatal Error]", err);
+  const msg = `[Fatal Error", ${err}`;
+  log("error", msg);
+  console.error(msg);
   console.log("Node NOT Exiting...");
 });
 
 async function startGateway() {
-  console.log("[Gateway] Starting single-instance mode...");
-
   try {
     // --- Load Secrets ---
     const dbSecrets = await getDBSecrets();
@@ -37,18 +38,15 @@ async function startGateway() {
 
     // --- Initialize Database ---
     await initDb(dbSecrets, appSecrets, environment);
-    console.log("[Gateway] Database initialized");
 
     // --- Initialize Instance Info ---
     await instanceService.init(environment);
     const uniqueId = instanceService.getUniqueId();
-    console.log(`[Gateway] Instance initialized as ${uniqueId}`);
 
     // --- Start EC2 tracking & leader election ---
-    const { isLeader, leaderId } = await ec2LaunchService.startInstance(uniqueId);
-    console.log(
-      `[Gateway] Instance ${uniqueId} registered. Leader: ${leaderId} (isLeader=${isLeader})`
-    );
+    await ec2LaunchService.startInstance(uniqueId);
+
+    initLogger()
 
     // --- Start Cleanup Loop ---
     ec2CleanupService.start(uniqueId);
@@ -67,7 +65,9 @@ async function startGateway() {
       try {
         await ec2LaunchService.stopInstance(uniqueId);
       } catch (err) {
-        console.error("[Gateway] Error cleaning up EC2 instance:", err);
+        const msg = `[Gateway] Error cleaning up EC2 instance: ${err}`;
+        log("error", msg);
+        console.error(msg);
       }
 
       process.exit(0);
@@ -76,7 +76,9 @@ async function startGateway() {
     process.on("SIGINT", shutdown);
     process.on("SIGTERM", shutdown);
   } catch (err) {
-    console.error("[Gateway] Fatal startup error:", err);
+    const msg = `[Gateway] Fatal startup error: ${err}`;
+    log("error", msg);
+    console.error(msg);
     process.exit(1);
   }
 }
