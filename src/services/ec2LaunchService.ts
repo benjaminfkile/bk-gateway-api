@@ -1,6 +1,16 @@
 import ec2Launch from "../db/ec2Launch";
 import ec2HeartbeatService from "./ec2HeartbeatService";
 
+async function waitForLaunchRecord(uniqueInstanceId: string, maxRetries = 5, delayMs = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    const exists = await ec2Launch.getByInstanceId(uniqueInstanceId);
+    if (exists) return true;
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  console.warn(`[Launch] Timeout waiting for ec2_launch row for ${uniqueInstanceId}`);
+  return false;
+}
+
 const ec2LaunchService = {
   async startInstance(uniqueInstanceId: string) {
     let record = await ec2Launch.getByInstanceId(uniqueInstanceId);
@@ -12,8 +22,14 @@ const ec2LaunchService = {
       console.log(`[Launch] Instance already recorded: ${uniqueInstanceId}`);
     }
 
-    // start heartbeat loop for this unique instance
-    ec2HeartbeatService.startHeartbeatLoop(uniqueInstanceId);
+    //Ensure launch record is visible before starting heartbeat
+    const confirmed = await waitForLaunchRecord(uniqueInstanceId);
+    if (confirmed) {
+      ec2HeartbeatService.startHeartbeatLoop(uniqueInstanceId);
+    } else {
+      console.warn(`[Launch] Skipping heartbeat start — launch record not confirmed`);
+    }
+
     return record;
   },
 

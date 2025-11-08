@@ -29,20 +29,6 @@ async function startPrimary() {
     const dbSecrets = await getDBSecrets();
     const appSecrets: IAPISecrets = await getAppSecrets();
     app.set("secrets", appSecrets);
-
-    // console.log(dbSecrets)
-    // console.log(appSecrets)
-    console.log("********************************************");
-    console.log("********************************************");
-    console.log("********************************************");
-
-    console.log("AWS_SECRET_ARN", process.env.AWS_SECRET_ARN);
-    console.log("AWS_DB_SECRET_ARN", process.env.AWS_DB_SECRET_ARN);
-
-    console.log("********************************************");
-    console.log("********************************************");
-    console.log("********************************************");
-
     // --- Determine Environment ---
     const environment: TNodeEnviromnent = isLocal()
       ? "local"
