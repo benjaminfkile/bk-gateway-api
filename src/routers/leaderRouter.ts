@@ -1,5 +1,4 @@
 import { Router } from "express";
-import instanceService from "../services/instanceService";
 import leaderElectionService from "../services/leaderElectionService";
 
 const leaderRouter = Router();
