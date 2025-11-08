@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import http from "http";
 import { initDb } from "./src/db/db";
 import app from "./src/app";
@@ -9,16 +8,13 @@ import { getDBSecrets } from "./src/aws/getDBSecrets";
 import { IAPISecrets } from "./src/interfaces";
 import { TNodeEnviromnent } from "./src/types";
 import { isLocal } from "./src/utils/isLocal";
-import ec2LaunchService from "./src/services/ec2LaunchService";
-import ec2CleanupService from "./src/services/ec2CleanupService";
-import instanceService from "./src/services/instanceService";
-import { initLogger, log } from "./src/utils/logger";
+import instanceMetadataService from "./src/services/instanceMetadataService";
+import leaderElectionService from "./src/services/leaderElectionService";
 
 const port = parseInt(process.env.PORT ?? "3000");
 
 process.on("uncaughtException", (err) => {
   const msg = `[Fatal Error", ${err}`;
-  log("error", msg);
   console.error(msg);
   console.log("Node NOT Exiting...");
 });
@@ -36,22 +32,16 @@ async function startGateway() {
       : (appSecrets.node_env as TNodeEnviromnent) || "local";
     app.set("environment", environment);
 
-    // --- Initialize Database ---
     await initDb(dbSecrets, appSecrets, environment);
 
-    // --- Initialize Instance Info ---
-    await instanceService.init(environment);
-    const uniqueId = instanceService.getUniqueId();
+    await instanceMetadataService.init(environment);
+    const instanceId = instanceMetadataService.instanceId;
+    if (instanceId) {
+      await leaderElectionService.init(instanceId);
+    } else {
+      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
 
-    // --- Start EC2 tracking & leader election ---
-    await ec2LaunchService.startInstance(uniqueId);
-
-    initLogger()
-
-    // --- Start Cleanup Loop ---
-    ec2CleanupService.start(uniqueId);
-
-    // --- Start HTTP Server ---
     const server = http.createServer(app);
     server.listen(port, "0.0.0.0", () => {
       console.log(`[Gateway] Listening on port ${port} [env=${environment}]`);
@@ -60,13 +50,11 @@ async function startGateway() {
     // --- Graceful Shutdown ---
     const shutdown = async () => {
       console.log("[Gateway] Shutting down gracefully...");
-      ec2CleanupService.stop();
 
       try {
-        await ec2LaunchService.stopInstance(uniqueId);
+        //await ec2LaunchService.stopInstance(uniqueId);
       } catch (err) {
         const msg = `[Gateway] Error cleaning up EC2 instance: ${err}`;
-        log("error", msg);
         console.error(msg);
       }
 
@@ -77,7 +65,6 @@ async function startGateway() {
     process.on("SIGTERM", shutdown);
   } catch (err) {
     const msg = `[Gateway] Fatal startup error: ${err}`;
-    log("error", msg);
     console.error(msg);
     process.exit(1);
   }

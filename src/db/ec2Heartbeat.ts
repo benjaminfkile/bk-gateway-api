@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import ec2Launch from "./ec2Launch";
 
 interface IEC2Heartbeat {
   id?: number;
@@ -7,28 +8,21 @@ interface IEC2Heartbeat {
 }
 
 const ec2Heartbeat = {
-  insert(instanceId: string) {
+  async beat(instanceId: string) {
     const db = getDb();
-
-    return db<IEC2Heartbeat>("ec2_heartbeat")
-      .insert({ instance_id: instanceId })
-      .returning("*")
-      .then((rows) => rows[0]);
+    await db<IEC2Heartbeat>("ec2_heartbeat").insert({
+      instance_id: instanceId,
+    });
   },
-
-  getByInstanceId(instanceId: string) {
+  async getLatest(instanceId: string) {
     const db = getDb();
-    return db<IEC2Heartbeat>("ec2_heartbeat")
-      .where({ instance_id: instanceId })
-      .orderBy("heartbeat_at", "desc");
-  },
 
-  getLatest(instanceId: string) {
-    const db = getDb();
-    return db<IEC2Heartbeat>("ec2_heartbeat")
+    const row = await db<IEC2Heartbeat>("ec2_heartbeat")
       .where({ instance_id: instanceId })
       .orderBy("heartbeat_at", "desc")
-      .first();
+      .first("heartbeat_at");
+
+    return row?.heartbeat_at ?? null;
   },
   deleteOlderThan(instanceId: string, cutoff: Date) {
     const db = getDb();

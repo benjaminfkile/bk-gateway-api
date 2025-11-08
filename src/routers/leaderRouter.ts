@@ -5,7 +5,7 @@ const leaderRouter = Router();
 
 leaderRouter.get("/", async (req, res) => {
   try {
-    const result = await leaderElectionService.getState();
+    const result = leaderElectionService.isLeader;
     res.json(result);
   } catch (err) {
     console.error("[LeaderRouter] Error:", err);

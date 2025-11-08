@@ -17,7 +17,6 @@ export async function initDb(
 
   const {db_name} = appSecrets
 
-
   const dbUrl = environmnet !== "local" ? proxy_url : host;
 
   db = knex({

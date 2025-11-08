@@ -2,7 +2,7 @@ import { IEC2Launch } from "../interfaces";
 import { getDb } from "./db";
 
 const ec2Launch = {
-  insert(instanceId: string) {
+  async insert(instanceId: string) {
     const db = getDb();
 
     return db<IEC2Launch>("ec2_launch")
@@ -11,30 +11,44 @@ const ec2Launch = {
       .then((rows) => rows[0]);
   },
 
-  getByInstanceId(instanceId: string) {
+  async updateIsLeader(instanceId: string, isLeader: boolean) {
     const db = getDb();
-    return db<IEC2Launch>("ec2_launch")
+
+    const [updated] = await db<IEC2Launch>("ec2_launch") //enforced to only one leader by idx `unique_single_leader
+      .where({ instance_id: instanceId })
+      .update({ is_leader: isLeader })
+      .returning("*");
+
+    return updated ?? null;
+  },
+
+  async getInstanceByInstanceId(instanceId: string) {
+    const db = getDb();
+
+    const row = await db<IEC2Launch>("ec2_launch")
+      .select("instance_id")
       .where({ instance_id: instanceId })
       .first();
+
+    return row?.instance_id ?? null;
   },
 
-  getAll() {
+  async getOldestInstanceId() {
     const db = getDb();
-    return db<IEC2Launch>("ec2_launch")
-      .select("*")
-      .orderBy("launched_at", "desc");
-  },
+    const row = await db<IEC2Launch>("ec2_launch")
+      .select("instance_id")
+      .orderBy("launched_at", "asc")
+      .first();
 
-  delete(instanceId: string) {
+    return row?.instance_id ?? "-1";
+  },
+  async delete(instanceId: string) {
     const db = getDb();
     return db<IEC2Launch>("ec2_launch")
       .where({ instance_id: instanceId })
       .del();
   },
-  async deleteStaleInstances(
-    thresholdSeconds = 10,
-    excludeInstanceId?: string
-  ) {
+  async deleteStaleInstances(thresholdSeconds = 5, excludeInstanceId?: string) {
     const db = getDb();
 
     const query = `

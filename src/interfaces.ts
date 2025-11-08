@@ -58,6 +58,7 @@ export interface IEC2Launch {
   id?: number;
   instance_id: string;
   launched_at?: string;
+  is_leader: boolean
 }
 
 export interface IInstanceMessage {
