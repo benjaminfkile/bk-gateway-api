@@ -1,7 +1,7 @@
 import ec2Heartbeat from "../db/ec2Heartbeat";
 import ec2Launch from "../db/ec2Launch";
 
-const STALE_INSTANCE_THRESHOL_SECONDS = 7;
+const STALE_INSTANCE_THRESHOL_SECONDS = 15;
 
 const leaderElectionService = {
   instanceId: "",

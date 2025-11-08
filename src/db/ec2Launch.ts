@@ -49,24 +49,41 @@ const ec2Launch = {
       .del();
   },
   async deleteStaleInstances(thresholdSeconds = 5, excludeInstanceId?: string) {
+    
     const db = getDb();
 
     const query = `
-    DELETE FROM ec2_launch
-    WHERE instance_id IN (
+    WITH stale AS (
       SELECT l.instance_id
       FROM ec2_launch l
       LEFT JOIN ec2_heartbeat h
         ON l.instance_id = h.instance_id
-      GROUP BY l.instance_id
-      HAVING MAX(h.heartbeat_at) < (NOW() - INTERVAL '${thresholdSeconds} seconds')
-         OR MAX(h.heartbeat_at) IS NULL
+      GROUP BY l.instance_id, l.launched_at
+      HAVING (
+        MAX(h.heartbeat_at) IS NOT NULL
+        AND MAX(h.heartbeat_at) < (NOW() - INTERVAL '${thresholdSeconds} seconds')
+      )
+      OR (
+        MAX(h.heartbeat_at) IS NULL
+        AND l.launched_at < (NOW() - INTERVAL '${thresholdSeconds} seconds')
+      )
     )
-    ${excludeInstanceId ? `AND instance_id != '${excludeInstanceId}'` : ""}
+    DELETE FROM ec2_launch
+    WHERE instance_id IN (SELECT instance_id FROM stale)
+    ${excludeInstanceId ? `AND instance_id != '${excludeInstanceId}'` : ""};
   `;
 
     const result = await db.raw(query);
-    return result.rowCount || 0;
+
+    // Return number of deleted rows safely
+    const affected =
+      result?.rowCount ?? result?.[0]?.rowCount ?? result?.rows?.length ?? 0;
+
+    if (affected > 0) {
+      console.log(`[LeaderService] Deleted ${affected} stale instances.`);
+    }
+
+    return affected;
   },
 };
 
