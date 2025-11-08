@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { amILeader } from "../utils/amILeader";
 import instanceService from "../services/instanceService";
+import leaderElectionService from "../services/leaderElectionService";
 
 const leaderRouter = Router();
 
 leaderRouter.get("/", async (req, res) => {
   try {
-    const instanceId = await instanceService.getId();
-    const result = await amILeader(instanceId);
+    const result = await leaderElectionService.getState();
     res.json(result);
   } catch (err) {
     console.error("[LeaderRouter] Error:", err);
