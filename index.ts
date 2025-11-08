@@ -30,6 +30,19 @@ async function startPrimary() {
     const appSecrets: IAPISecrets = await getAppSecrets();
     app.set("secrets", appSecrets);
 
+    // console.log(dbSecrets)
+    // console.log(appSecrets)
+    console.log("********************************************");
+    console.log("********************************************");
+    console.log("********************************************");
+
+    console.log("AWS_SECRET_ARN", process.env.AWS_SECRET_ARN);
+    console.log("AWS_DB_SECRET_ARN", process.env.AWS_DB_SECRET_ARN);
+
+    console.log("********************************************");
+    console.log("********************************************");
+    console.log("********************************************");
+
     // --- Determine Environment ---
     const environment: TNodeEnviromnent = isLocal()
       ? "local"
@@ -96,25 +109,29 @@ async function startPrimary() {
 
 async function startWorker() {
   try {
-    const { id, env } = await new Promise<{ id: string; env: TNodeEnviromnent }>(
-      (resolve) => {
-        process.send?.({ type: "GET_INSTANCE_ID" });
+    const { id, env } = await new Promise<{
+      id: string;
+      env: TNodeEnviromnent;
+    }>((resolve) => {
+      process.send?.({ type: "GET_INSTANCE_ID" });
 
-        process.on("message", (msg: unknown) => {
-          if (
-            typeof msg === "object" &&
-            msg !== null &&
-            "type" in msg &&
-            (msg as IInstanceMessage).type === "INSTANCE_ID"
-          ) {
-            resolve(
-              //@ts-ignore
-              (msg as IInstanceMessage).data as { id: string; env: TNodeEnviromnent }
-            );
-          }
-        });
-      }
-    );
+      process.on("message", (msg: unknown) => {
+        if (
+          typeof msg === "object" &&
+          msg !== null &&
+          "type" in msg &&
+          (msg as IInstanceMessage).type === "INSTANCE_ID"
+        ) {
+          resolve(
+            //@ts-ignore
+            (msg as IInstanceMessage).data as {
+              id: string;
+              env: TNodeEnviromnent;
+            }
+          );
+        }
+      });
+    });
 
     // --- hydrate instanceService ---
     await instanceService.setFromParent(id, env);
@@ -124,9 +141,9 @@ async function startWorker() {
     const appSecrets: IAPISecrets = await getAppSecrets();
     await initDb(dbSecrets, appSecrets, env);
 
-    console.log(
-      `[Gateway Worker ${process.pid}] DB initialized, using instanceId ${id}`
-    );
+    // console.log(
+    //   `[Gateway Worker ${process.pid}] DB initialized, using instanceId ${id}`
+    // );
 
     const server = http.createServer(app);
     server.listen(port, "0.0.0.0", () => {
