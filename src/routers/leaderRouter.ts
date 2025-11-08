@@ -5,8 +5,8 @@ const leaderRouter = Router();
 
 leaderRouter.get("/", async (req, res) => {
   try {
-    const result = leaderElectionService.isLeader;
-    res.json(result);
+    const { isLeader, instanceId } = leaderElectionService
+    res.json({isLeader: isLeader, instanceId: instanceId});
   } catch (err) {
     console.error("[LeaderRouter] Error:", err);
     res.status(500).json({ error: "Failed to determine leader status" });
