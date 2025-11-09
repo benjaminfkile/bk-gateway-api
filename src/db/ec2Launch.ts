@@ -2,11 +2,11 @@ import { IEC2Launch } from "../interfaces";
 import { getDb } from "./db";
 
 const ec2Launch = {
-  async insert(instanceId: string) {
+  async insert(instanceId: string, privateIp: string) {
     const db = getDb();
 
     return db<IEC2Launch>("ec2_launch")
-      .insert({ instance_id: instanceId })
+      .insert({ instance_id: instanceId, private_ip: privateIp })
       .returning("*")
       .then((rows) => rows[0]);
   },

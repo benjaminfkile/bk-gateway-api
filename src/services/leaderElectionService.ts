@@ -73,7 +73,7 @@ const leaderElectionService = {
           "[LeaderService]: inserting first ec2_launch record for:",
           this.aboutMe.myInstanceId
         );
-        await ec2Launch.insert(this.aboutMe.myInstanceId);
+        await ec2Launch.insert(this.aboutMe.myInstanceId, this.aboutMe.myIp);
       }
 
       this.lastChecked = new Date();
