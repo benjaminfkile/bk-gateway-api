@@ -1,21 +1,23 @@
 import ec2Heartbeat from "../db/ec2Heartbeat";
 import ec2Launch from "../db/ec2Launch";
+import { IAboutMe } from "../interfaces";
+import { isLocal } from "../utils/isLocal";
 // import socketIOService from "../socket.io/socketIOService";
 
 const STALE_INSTANCE_THRESHOL_SECONDS = 15;
 
 const leaderElectionService = {
-  instanceId: "",
-  isLeader: false,
-  leaderId: null,
+  aboutMe: {} as IAboutMe,
   lastChecked: null as Date | null,
   interval: null as NodeJS.Timeout | null,
 
   /**
    * Initialize election system for this instance.
    */
-  async init(instanceId: string) {
-    this.instanceId = instanceId;
+  async init(instanceId: string, privateIp: string) {
+    this.aboutMe.myInstanceId = instanceId;
+    this.aboutMe.myIp = privateIp
+    this.aboutMe.amILeader = isLocal() ? true : false
     // socketIOService.init(false, instanceId)
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
 
@@ -30,48 +32,48 @@ const leaderElectionService = {
     try {
       await ec2Launch.deleteStaleInstances(
         STALE_INSTANCE_THRESHOL_SECONDS,
-        this.instanceId
+        this.aboutMe.myInstanceId
       );
       const hasInstanceRecord = await ec2Launch.getInstanceByInstanceId(
-        this.instanceId
+        this.aboutMe.myInstanceId
       );
 
       if (hasInstanceRecord) {
-        const hasHeartbeat = await ec2Heartbeat.getLatest(this.instanceId);
+        const hasHeartbeat = await ec2Heartbeat.getLatest(this.aboutMe.myInstanceId);
 
         if (hasHeartbeat) {
-          await ec2Heartbeat.beat(this.instanceId);
+          await ec2Heartbeat.beat(this.aboutMe.myInstanceId);
 
           const oldestInstanceId = await ec2Launch.getOldestInstanceId();
 
           if (oldestInstanceId === "-1") {
-            await ec2Launch.updateIsLeader(this.instanceId, true);
-            this.isLeader = true
+            await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
+            this.aboutMe.amILeader = true
             // socketIOService.setRole(true);
           } else if (
             oldestInstanceId !== "-1" &&
-            oldestInstanceId === this.instanceId
+            oldestInstanceId === this.aboutMe.myInstanceId
           ) {
-            await ec2Launch.updateIsLeader(this.instanceId, true);
-            this.isLeader = true;
+            await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
+            this.aboutMe.amILeader = true;
             // socketIOService.setRole(true);
           } else {
-            this.isLeader = false;
+            this.aboutMe.amILeader = false;
             // socketIOService.setRole(false)
           }
         } else {
           console.log(
             "[LeaderService]: Inserting first ec2_heartbeat record for",
-            this.instanceId
+            this.aboutMe.myInstanceId
           );
-          await ec2Heartbeat.beat(this.instanceId);
+          await ec2Heartbeat.beat(this.aboutMe.myInstanceId);
         }
       } else {
         console.log(
           "[LeaderService]: inserting first ec2_launch record for:",
-          this.instanceId
+          this.aboutMe.myInstanceId
         );
-        await ec2Launch.insert(this.instanceId);
+        await ec2Launch.insert(this.aboutMe.myInstanceId);
       }
 
       this.lastChecked = new Date();

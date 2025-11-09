@@ -1,78 +1,98 @@
 import os from "os";
 import crypto from "crypto";
+import { isLocal } from "../utils/isLocal";
+
+const METADATA_BASE_URL = "http://169.254.169.254/latest";
 
 const instanceMetadataService = {
   instanceId: null as string | null,
-  environment: "local",
+  privateIp: null as string | null,
+  environment: "local" as string,
 
   async init(env: string) {
-    if (this.instanceId) return; // already initialized
-    const id = await this.getInstanceId();
-    this.instanceId = `${id}-${env}`;
+    if (this.instanceId && this.privateIp) return; // already initialized
+
     this.environment = env;
-    console.log(`[instanceMetadataService] Initialized with ID: ${this.instanceId}`);
+
+    const { instanceId, privateIp } = await this.getMetadata();
+    this.instanceId = instanceId;
+    this.privateIp = privateIp;
+
+    console.log(
+      `[instanceMetadataService] Initialized with ID=${instanceId}, IP=${privateIp}, ENV=${env}`
+    );
   },
-  getInstanceId: async (): Promise<string> => {
-    const METADATA_URL = "http://169.254.169.254/latest";
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1000);
+
+  async getMetadata(): Promise<{ instanceId: string; privateIp: string }> {
+    const token = await this.getToken();
+
+    // build headers only if token exists
+    const headers: Record<string, string> = {};
+    if (token) headers["X-aws-ec2-metadata-token"] = token;
 
     try {
-      // Step 1: Request a session token for IMDSv2
-      const tokenRes = await fetch(`${METADATA_URL}/api/token`, {
-        method: "PUT",
-        headers: {
-          "X-aws-ec2-metadata-token-ttl-seconds": "60",
-        },
-        signal: controller.signal,
+      // --- Step 1: Get instance ID ---
+      const idRes = await fetch(`${METADATA_BASE_URL}/meta-data/instance-id`, {
+        headers,
       });
+      const instanceId = idRes.ok ? (await idRes.text()).trim() : null;
 
-      clearTimeout(timeout);
-
-      let token: string | null = null;
-
-      if (tokenRes.ok) {
-        token = await tokenRes.text();
-      } else {
-        console.warn(
-          `[getInstanceId] Could not fetch IMDSv2 token (status ${tokenRes.status}), falling back to IMDSv1`
-        );
-      }
-
-      // Step 2: Retrieve the instance ID (with token if available)
-      const idController = new AbortController();
-      const idTimeout = setTimeout(() => idController.abort(), 1000);
-
-      const res = await fetch(`${METADATA_URL}/meta-data/instance-id`, {
-        headers: token ? { "X-aws-ec2-metadata-token": token } : {},
-        signal: idController.signal,
+      // --- Step 2: Get private IP ---
+      const ipRes = await fetch(`${METADATA_BASE_URL}/meta-data/local-ipv4`, {
+        headers,
       });
+      const privateIp = ipRes.ok ? (await ipRes.text()).trim() : null;
 
-      clearTimeout(idTimeout);
-
-      if (res.ok) {
-        const instanceId = (await res.text()).trim();
-        console.log(`[getInstanceId] Using EC2 instance ID: ${instanceId}`);
-        return instanceId;
+      if (instanceId && privateIp) {
+        return { instanceId, privateIp };
       }
 
       console.warn(
-        `[getInstanceId] Metadata service responded with status ${res.status}`
+        "[instanceMetadataService] Incomplete metadata, using fallback"
       );
     } catch (err) {
       console.warn(
-        `[getInstanceId] Failed to retrieve EC2 metadata: ${
+        `[instanceMetadataService] Failed to contact metadata service: ${
           err instanceof Error ? err.message : String(err)
         }`
       );
     }
 
-    // Step 3: Fallback for local environments
+    // --- Step 3: Fallback for local / non-EC2 environments ---
     const hostname = os.hostname();
     const uuid = crypto.randomUUID();
-    const fallbackId = `${hostname}-${uuid}`;
-    console.log(`[getInstanceId] Using fallback instance ID: ${fallbackId}`);
-    return fallbackId;
+    return {
+      instanceId: `${hostname}-${uuid}`,
+      privateIp: "127.0.0.1",
+    };
+  },
+
+  async getToken(): Promise<string | null> {
+    try {
+      const res = await fetch(`${METADATA_BASE_URL}/api/token`, {
+        method: "PUT",
+        headers: {
+          "X-aws-ec2-metadata-token-ttl-seconds": "60",
+        },
+        signal: AbortSignal.timeout(1000),
+      });
+
+      if (res.ok) {
+        return await res.text();
+      }
+
+      console.warn(
+        `[instanceMetadataService] IMDSv2 token request failed (status ${res.status}), falling back to IMDSv1`
+      );
+      return null;
+    } catch (err) {
+      console.warn(
+        "[instanceMetadataService] Could not fetch IMDSv2 token:",
+        err
+      );
+      return null;
+    }
   },
 };
+
 export default instanceMetadataService;

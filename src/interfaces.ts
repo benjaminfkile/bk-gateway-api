@@ -96,3 +96,9 @@ export interface IServiceLogSettings {
   min_level: LogLevel
   updated_at?: Date;
 }
+
+export interface IAboutMe {
+  amILeader: boolean;
+  myInstanceId: string;
+  myIp: string;
+}
