@@ -1,5 +1,6 @@
 import ec2Heartbeat from "../db/ec2Heartbeat";
 import ec2Launch from "../db/ec2Launch";
+// import socketIOService from "../socket.io/socketIOService";
 
 const STALE_INSTANCE_THRESHOL_SECONDS = 15;
 
@@ -15,6 +16,7 @@ const leaderElectionService = {
    */
   async init(instanceId: string) {
     this.instanceId = instanceId;
+    // socketIOService.init(false, instanceId)
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
 
     // Do first-time evaluation immediately
@@ -44,14 +46,18 @@ const leaderElectionService = {
 
           if (oldestInstanceId === "-1") {
             await ec2Launch.updateIsLeader(this.instanceId, true);
+            this.isLeader = true
+            // socketIOService.setRole(true);
           } else if (
             oldestInstanceId !== "-1" &&
             oldestInstanceId === this.instanceId
           ) {
             await ec2Launch.updateIsLeader(this.instanceId, true);
             this.isLeader = true;
+            // socketIOService.setRole(true);
           } else {
             this.isLeader = false;
+            // socketIOService.setRole(false)
           }
         } else {
           console.log(
