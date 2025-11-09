@@ -48,8 +48,13 @@ const ec2Launch = {
       .where({ instance_id: instanceId })
       .del();
   },
+  async getAll() {
+    const db = getDb();
+    return db<IEC2Launch>("ec2_launch")
+      .select("*")
+      .orderBy("launched_at", "desc");
+  },
   async deleteStaleInstances(thresholdSeconds = 5, excludeInstanceId?: string) {
-    
     const db = getDb();
 
     const query = `

@@ -11,6 +11,7 @@ import { serviceMap } from "./config/serviceMap";
 import { isLocal } from "./utils/isLocal";
 import healthRouter from "./routers/healthRouter";
 import aboutMeRouter from "./routers/aboutMeRouter";
+import ec2LaunchRouter from "./routers/ec2LaunchRouter";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(cors());
 app.get("/", (_req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
 app.use("/api/about-me", aboutMeRouter)
+app.use("/api/ec2-launch", ec2LaunchRouter)
 
 app.get("/api/gateway-info", (_req, res) => {
   res.json({
