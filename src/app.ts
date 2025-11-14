@@ -12,6 +12,8 @@ import { isLocal } from "./utils/isLocal";
 import healthRouter from "./routers/healthRouter";
 import aboutMeRouter from "./routers/aboutMeRouter";
 import ec2LaunchRouter from "./routers/ec2LaunchRouter";
+import utilsRouter from "./routers/utilsRouter";
+import protectedRoute from "./middleware/protectedRoute";
 
 const app = express();
 
@@ -27,8 +29,9 @@ app.use(cors());
 
 app.get("/", (_req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
-app.use("/api/about-me", aboutMeRouter)
-app.use("/api/ec2-launch", ec2LaunchRouter)
+app.use("/api/about-me", protectedRoute(), aboutMeRouter)
+app.use("/api/ec2-launch", protectedRoute(), ec2LaunchRouter)
+app.use("/api/utils", utilsRouter)
 
 app.get("/api/gateway-info", (_req, res) => {
   res.json({

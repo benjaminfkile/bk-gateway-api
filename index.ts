@@ -25,7 +25,6 @@ async function startGateway() {
     const dbSecrets = await getDBSecrets();
     const appSecrets: IAPISecrets = await getAppSecrets();
     app.set("secrets", appSecrets);
-
     // --- Determine Environment ---
     const environment: TNodeEnviromnent = isLocal()
       ? "local"
