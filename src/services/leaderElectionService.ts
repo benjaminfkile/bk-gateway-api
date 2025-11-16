@@ -2,7 +2,6 @@ import ec2Heartbeat from "../db/ec2Heartbeat";
 import ec2Launch from "../db/ec2Launch";
 import { IAboutMe } from "../interfaces";
 import { isLocal } from "../utils/isLocal";
-// import socketIOService from "../socket.io/socketIOService";
 
 const STALE_INSTANCE_THRESHOL_SECONDS = 15;
 
@@ -18,7 +17,6 @@ const leaderElectionService = {
     this.aboutMe.myInstanceId = instanceId;
     this.aboutMe.myIp = privateIp
     this.aboutMe.amILeader = isLocal() ? true : false
-    // socketIOService.init(false, instanceId)
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
 
     // Do first-time evaluation immediately
@@ -49,17 +47,14 @@ const leaderElectionService = {
           if (oldestInstanceId === "-1") {
             await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
             this.aboutMe.amILeader = true
-            // socketIOService.setRole(true);
           } else if (
             oldestInstanceId !== "-1" &&
             oldestInstanceId === this.aboutMe.myInstanceId
           ) {
             await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
             this.aboutMe.amILeader = true;
-            // socketIOService.setRole(true);
           } else {
             this.aboutMe.amILeader = false;
-            // socketIOService.setRole(false)
           }
         } else {
           console.log(
