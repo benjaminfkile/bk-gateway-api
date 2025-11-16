@@ -8,87 +8,64 @@ const instanceMetadataService = {
   environment: "local" as string,
 
   async init(env: string) {
-    if (this.instanceId && this.publicIp) return; // already initialized
-
     this.environment = env;
 
-    const { instanceId, publicIp } = await this.getMetadata();
+    const { instanceId, publicIp } = await this.fetchMetadataStrict();
+
     this.instanceId = instanceId;
     this.publicIp = publicIp;
 
     console.log(
-      `[instanceMetadataService] Initialized with ID=${instanceId}, IP=${publicIp}, ENV=${env}`
+      `[instanceMetadataService] Initialized: instanceId=${instanceId}, publicIp=${publicIp}, env=${env}`
     );
   },
 
-  async getMetadata(): Promise<{ instanceId: string; publicIp: string }> {
-    const token = await this.getToken();
+  async fetchMetadataStrict(): Promise<{ instanceId: string; publicIp: string }> {
+    // Local dev bypass
+    if (process.env.IS_LOCAL === "true" || this.environment === "local") {
+      const id = `local-instance-${crypto.randomUUID()}`;
+      console.log(`[instanceMetadataService] Running local, ID=${id}`);
+      return { instanceId: id, publicIp: "127.0.0.1" };
+    }
 
-    // build headers only if token exists
-    const headers: Record<string, string> = {};
-    if (token) headers["X-aws-ec2-metadata-token"] = token;
+    const token = await this.fetchToken();
 
-    try {
-      // --- Step 1: Get instance ID ---
-      const idRes = await fetch(`${METADATA_BASE_URL}/meta-data/instance-id`, {
-        headers,
-      });
-      const instanceId = idRes.ok ? (await idRes.text()).trim() : null;
+    const headers = { "X-aws-ec2-metadata-token": token };
 
-      // --- Step 2: Get private IP ---
-      const ipRes = await fetch(`${METADATA_BASE_URL}/meta-data/local-ipv4`, {
-        headers,
-      });
-      const publicIp = ipRes.ok ? (await ipRes.text()).trim() : null;
-
-      if (instanceId && publicIp) {
-        return { instanceId, publicIp };
+    const fetchMeta = async (path: string) => {
+      const res = await fetch(`${METADATA_BASE_URL}${path}`, { headers });
+      if (!res.ok) {
+        throw new Error(`IMDS metadata failed: ${path}, status=${res.status}`);
       }
+      return (await res.text()).trim();
+    };
 
-      console.warn(
-        "[instanceMetadataService] Incomplete metadata, using fallback"
-      );
-    } catch (err) {
-      console.warn(
-        `[instanceMetadataService] Failed to contact metadata service: ${
-          err instanceof Error ? err.message : String(err)
-        }`
+    const instanceId = await fetchMeta("/meta-data/instance-id");
+    const publicIp = await fetchMeta("/meta-data/public-ipv4");
+
+    if (!publicIp) {
+      throw new Error(
+        "IMDS returned no public-ipv4. Ensure the EC2 instance has a public IP."
       );
     }
 
-    // --- Step 3: Fallback for local / non-EC2 environments ---
-    const uuid = crypto.randomUUID();
-    return {
-      instanceId: `local-instance-${uuid}`,
-      publicIp: "127.0.0.1",
-    };
+    return { instanceId, publicIp };
   },
 
-  async getToken(): Promise<string | null> {
-    try {
-      const res = await fetch(`${METADATA_BASE_URL}/api/token`, {
-        method: "PUT",
-        headers: {
-          "X-aws-ec2-metadata-token-ttl-seconds": "60",
-        },
-        signal: AbortSignal.timeout(1000),
-      });
+  async fetchToken(): Promise<string> {
+    const res = await fetch(`${METADATA_BASE_URL}/api/token`, {
+      method: "PUT",
+      headers: { "X-aws-ec2-metadata-token-ttl-seconds": "21600" },
+      signal: AbortSignal.timeout(1500),
+    });
 
-      if (res.ok) {
-        return await res.text();
-      }
-
-      console.warn(
-        `[instanceMetadataService] IMDSv2 token request failed (status ${res.status}), falling back to IMDSv1`
+    if (!res.ok) {
+      throw new Error(
+        `Failed to get IMDSv2 token: status=${res.status}. IMDSv2 is required.`
       );
-      return null;
-    } catch (err) {
-      console.warn(
-        "[instanceMetadataService] Could not fetch IMDSv2 token:",
-        err
-      );
-      return null;
     }
+
+    return await res.text();
   },
 };
 
