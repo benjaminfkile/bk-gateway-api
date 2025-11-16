@@ -4,24 +4,24 @@ const METADATA_BASE_URL = "http://169.254.169.254/latest";
 
 const instanceMetadataService = {
   instanceId: null as string | null,
-  privateIp: null as string | null,
+  publicIp: null as string | null,
   environment: "local" as string,
 
   async init(env: string) {
-    if (this.instanceId && this.privateIp) return; // already initialized
+    if (this.instanceId && this.publicIp) return; // already initialized
 
     this.environment = env;
 
-    const { instanceId, privateIp } = await this.getMetadata();
+    const { instanceId, publicIp } = await this.getMetadata();
     this.instanceId = instanceId;
-    this.privateIp = privateIp;
+    this.publicIp = publicIp;
 
     console.log(
-      `[instanceMetadataService] Initialized with ID=${instanceId}, IP=${privateIp}, ENV=${env}`
+      `[instanceMetadataService] Initialized with ID=${instanceId}, IP=${publicIp}, ENV=${env}`
     );
   },
 
-  async getMetadata(): Promise<{ instanceId: string; privateIp: string }> {
+  async getMetadata(): Promise<{ instanceId: string; publicIp: string }> {
     const token = await this.getToken();
 
     // build headers only if token exists
@@ -39,10 +39,10 @@ const instanceMetadataService = {
       const ipRes = await fetch(`${METADATA_BASE_URL}/meta-data/local-ipv4`, {
         headers,
       });
-      const privateIp = ipRes.ok ? (await ipRes.text()).trim() : null;
+      const publicIp = ipRes.ok ? (await ipRes.text()).trim() : null;
 
-      if (instanceId && privateIp) {
-        return { instanceId, privateIp };
+      if (instanceId && publicIp) {
+        return { instanceId, publicIp };
       }
 
       console.warn(
@@ -60,7 +60,7 @@ const instanceMetadataService = {
     const uuid = crypto.randomUUID();
     return {
       instanceId: `local-instance-${uuid}`,
-      privateIp: "127.0.0.1",
+      publicIp: "127.0.0.1",
     };
   },
 

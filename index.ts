@@ -34,9 +34,9 @@ async function startGateway() {
     await initDb(dbSecrets, appSecrets, environment);
 
     await instanceMetadataService.init(environment);
-    const { instanceId, privateIp } = instanceMetadataService;
-    if (instanceId && privateIp) {
-      await leaderElectionService.init(instanceId, privateIp);
+    const { instanceId, publicIp } = instanceMetadataService;
+    if (instanceId && publicIp) {
+      await leaderElectionService.init(instanceId, publicIp);
     } else {
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }

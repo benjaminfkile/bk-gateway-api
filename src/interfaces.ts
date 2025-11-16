@@ -33,7 +33,7 @@ export interface IEC2Launch {
   instance_id: string;
   launched_at?: string;
   is_leader: boolean
-  private_ip: string
+  public_ip: string
 }
 
 export interface IInstanceMessage {

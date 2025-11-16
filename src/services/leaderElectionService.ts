@@ -12,9 +12,9 @@ const leaderElectionService = {
   /**
    * Initialize election system for this instance.
    */
-  async init(instanceId: string, privateIp: string) {
+  async init(instanceId: string, publicIp: string) {
     this.aboutMe.myInstanceId = instanceId;
-    this.aboutMe.myIp = privateIp;
+    this.aboutMe.myIp = publicIp;
     this.aboutMe.amILeader =
       process.env.ASSUME_LEADER === "true" ? true : false;
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
