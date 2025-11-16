@@ -1,6 +1,4 @@
-import os from "os";
 import crypto from "crypto";
-import { isLocal } from "../utils/isLocal";
 
 const METADATA_BASE_URL = "http://169.254.169.254/latest";
 
@@ -59,10 +57,9 @@ const instanceMetadataService = {
     }
 
     // --- Step 3: Fallback for local / non-EC2 environments ---
-    const hostname = os.hostname();
     const uuid = crypto.randomUUID();
     return {
-      instanceId: `${hostname}-${uuid}`,
+      instanceId: `local-instance-${uuid}`,
       privateIp: "127.0.0.1",
     };
   },

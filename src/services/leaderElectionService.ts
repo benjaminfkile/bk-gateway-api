@@ -1,7 +1,6 @@
 import ec2Heartbeat from "../db/ec2Heartbeat";
 import ec2Launch from "../db/ec2Launch";
 import { IAboutMe } from "../interfaces";
-import { isLocal } from "../utils/isLocal";
 
 const STALE_INSTANCE_THRESHOL_SECONDS = 15;
 
@@ -15,8 +14,9 @@ const leaderElectionService = {
    */
   async init(instanceId: string, privateIp: string) {
     this.aboutMe.myInstanceId = instanceId;
-    this.aboutMe.myIp = privateIp
-    this.aboutMe.amILeader = isLocal() ? true : false
+    this.aboutMe.myIp = privateIp;
+    this.aboutMe.amILeader =
+      process.env.ASSUME_LEADER === "true" ? true : false;
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
 
     // Do first-time evaluation immediately
@@ -37,7 +37,9 @@ const leaderElectionService = {
       );
 
       if (hasInstanceRecord) {
-        const hasHeartbeat = await ec2Heartbeat.getLatest(this.aboutMe.myInstanceId);
+        const hasHeartbeat = await ec2Heartbeat.getLatest(
+          this.aboutMe.myInstanceId
+        );
 
         if (hasHeartbeat) {
           await ec2Heartbeat.beat(this.aboutMe.myInstanceId);
@@ -46,7 +48,7 @@ const leaderElectionService = {
 
           if (oldestInstanceId === "-1") {
             await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
-            this.aboutMe.amILeader = true
+            this.aboutMe.amILeader = true;
           } else if (
             oldestInstanceId !== "-1" &&
             oldestInstanceId === this.aboutMe.myInstanceId
