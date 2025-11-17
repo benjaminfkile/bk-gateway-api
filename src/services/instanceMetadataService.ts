@@ -1,31 +1,38 @@
 import crypto from "crypto";
+import { isLocal } from "../utils/isLocal";
 
 const METADATA_BASE_URL = "http://169.254.169.254/latest";
 
 const instanceMetadataService = {
   instanceId: null as string | null,
   publicIp: null as string | null,
-  environment: "local" as string,
+  privateIp: null as string | null,
 
-  async init(env: string) {
-    this.environment = env;
-
-    const { instanceId, publicIp } = await this.fetchMetadataStrict();
+  async init() {
+    const { instanceId, publicIp, privateIp } =
+      await this.fetchMetadataStrict();
 
     this.instanceId = instanceId;
     this.publicIp = publicIp;
+    this.privateIp = privateIp;
 
     console.log(
-      `[instanceMetadataService] Initialized: instanceId=${instanceId}, publicIp=${publicIp}, env=${env}`
+      `[instanceMetadataService] Initialized: instanceId=${instanceId}, publicIp=${publicIp}, env=${
+        isLocal() ? "local" : "AWS"
+      }`
     );
   },
 
-  async fetchMetadataStrict(): Promise<{ instanceId: string; publicIp: string }> {
+  async fetchMetadataStrict(): Promise<{
+    instanceId: string;
+    publicIp: string;
+    privateIp: string;
+  }> {
     // Local dev bypass
-    if (process.env.IS_LOCAL === "true" || this.environment === "local") {
+    if (isLocal()) {
       const id = `local-instance-${crypto.randomUUID()}`;
       console.log(`[instanceMetadataService] Running local, ID=${id}`);
-      return { instanceId: id, publicIp: "127.0.0.1" };
+      return { instanceId: id, publicIp: "127.0.0.1", privateIp: "127.0.0.1" };
     }
 
     const token = await this.fetchToken();
@@ -42,6 +49,7 @@ const instanceMetadataService = {
 
     const instanceId = await fetchMeta("/meta-data/instance-id");
     const publicIp = await fetchMeta("/meta-data/public-ipv4");
+    const privateIp = await fetchMeta("/meta-data/local-ipv4");
 
     if (!publicIp) {
       throw new Error(
@@ -49,7 +57,7 @@ const instanceMetadataService = {
       );
     }
 
-    return { instanceId, publicIp };
+    return { instanceId, publicIp, privateIp };
   },
 
   async fetchToken(): Promise<string> {

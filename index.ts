@@ -33,12 +33,13 @@ async function startGateway() {
 
     await initDb(dbSecrets, appSecrets, environment);
 
-    await instanceMetadataService.init(environment);
-    const { instanceId, publicIp } = instanceMetadataService;
-    if (instanceId && publicIp) {
-      await leaderElectionService.init(instanceId, publicIp);
+    await instanceMetadataService.init();
+    const { instanceId, publicIp , privateIp} = instanceMetadataService;
+    if (instanceId && publicIp && privateIp) {
+      await leaderElectionService.init(instanceId, publicIp, privateIp);
     } else {
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      console.error("leaderElectionService init in index.ts if broken")
     }
 
     const server = http.createServer(app);

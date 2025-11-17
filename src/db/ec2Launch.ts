@@ -2,11 +2,11 @@ import { IEC2Launch } from "../interfaces";
 import { getDb } from "./db";
 
 const ec2Launch = {
-  async insert(instanceId: string, publicIp: string) {
+  async insert(instanceId: string, publicIp: string, privateIp: string) {
     const db = getDb();
 
     return db<IEC2Launch>("ec2_launch")
-      .insert({ instance_id: instanceId, public_ip: publicIp })
+      .insert({ instance_id: instanceId, public_ip: publicIp, private_ip: privateIp })
       .returning("*")
       .then((rows) => rows[0]);
   },
@@ -89,6 +89,24 @@ const ec2Launch = {
     }
 
     return affected;
+  },
+  async forceLeader(instanceId: string) {
+    const db = getDb();
+
+    await db.transaction(async (trx) => {
+      // 1) Clear leader flag from all instances
+      await trx("ec2_launch").update({ is_leader: false });
+
+      // 2) Set this instance as leader and force it oldest timestamp
+      await trx("ec2_launch")
+        .where({ instance_id: instanceId })
+        .update({
+          is_leader: true,
+          launched_at: trx.raw("to_timestamp(0)"), // 1970-01-01, youngest always wins
+        });
+
+      console.log(`[ec2Launch] Forced leader: ${instanceId}`);
+    });
   },
 };
 

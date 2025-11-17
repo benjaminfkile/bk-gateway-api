@@ -34,6 +34,7 @@ export interface IEC2Launch {
   launched_at?: string;
   is_leader: boolean
   public_ip: string
+  private_ip: string
 }
 
 export interface IInstanceMessage {
@@ -75,5 +76,6 @@ export interface IServiceLogSettings {
 export interface IAboutMe {
   amILeader: boolean;
   myInstanceId: string;
-  myIp: string;
+  publicIp: string;
+  privateIp: string
 }

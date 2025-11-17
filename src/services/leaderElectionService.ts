@@ -12,11 +12,10 @@ const leaderElectionService = {
   /**
    * Initialize election system for this instance.
    */
-  async init(instanceId: string, publicIp: string) {
+  async init(instanceId: string, publicIp: string, privateIp: string) {
     this.aboutMe.myInstanceId = instanceId;
-    this.aboutMe.myIp = publicIp;
-    this.aboutMe.amILeader =
-      process.env.ASSUME_LEADER === "true" ? true : false;
+    this.aboutMe.publicIp = publicIp;
+    this.aboutMe.privateIp = privateIp
     console.log(`[leaderElectionService] Initializing for ${instanceId}`);
 
     // Do first-time evaluation immediately
@@ -27,6 +26,8 @@ const leaderElectionService = {
   },
 
   async evaluate() {
+    const forceLeader =
+      process.env.FORCE_LEADER && process.env.FORCE_LEADER === "true";
     try {
       await ec2Launch.deleteStaleInstances(
         STALE_INSTANCE_THRESHOL_SECONDS,
@@ -44,19 +45,25 @@ const leaderElectionService = {
         if (hasHeartbeat) {
           await ec2Heartbeat.beat(this.aboutMe.myInstanceId);
 
-          const oldestInstanceId = await ec2Launch.getOldestInstanceId();
-
-          if (oldestInstanceId === "-1") {
-            await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
+          if (forceLeader && !this.aboutMe.amILeader) {
             this.aboutMe.amILeader = true;
-          } else if (
-            oldestInstanceId !== "-1" &&
-            oldestInstanceId === this.aboutMe.myInstanceId
-          ) {
-            await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
-            this.aboutMe.amILeader = true;
+            await ec2Launch.forceLeader(this.aboutMe.myInstanceId);
           } else {
-            this.aboutMe.amILeader = false;
+            
+            const oldestInstanceId = await ec2Launch.getOldestInstanceId();
+
+            if (oldestInstanceId === "-1") {
+              await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
+              this.aboutMe.amILeader = true;
+            } else if (
+              oldestInstanceId !== "-1" &&
+              oldestInstanceId === this.aboutMe.myInstanceId
+            ) {
+              await ec2Launch.updateIsLeader(this.aboutMe.myInstanceId, true);
+              this.aboutMe.amILeader = true;
+            } else {
+              this.aboutMe.amILeader = false;
+            }
           }
         } else {
           console.log(
@@ -70,7 +77,7 @@ const leaderElectionService = {
           "[LeaderService]: inserting first ec2_launch record for:",
           this.aboutMe.myInstanceId
         );
-        await ec2Launch.insert(this.aboutMe.myInstanceId, this.aboutMe.myIp);
+        await ec2Launch.insert(this.aboutMe.myInstanceId, this.aboutMe.publicIp, this.aboutMe.privateIp);
       }
 
       this.lastChecked = new Date();
