@@ -21,16 +21,7 @@ const app = express();
 if (isLocal()) app.use(morgan("tiny"));
 
 // Minimal security headers
-// app.use(helmet({ crossOriginResourcePolicy: false }));
-
-app.use(
-  helmet({
-    frameguard: false,
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: false,
-  })
-);
-
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 
 // Don't use express.json() before proxy; only after
