@@ -7,7 +7,7 @@ const healthRouter = express.Router();
 healthRouter.route("/").get(async (req: Request, res: Response) => {
   const results: Record<string, any> = {};
 
-  // Only check APIs that are marked for health inclusion
+  // Only check APIs marked for inclusion
   const servicesToCheck = Object.entries(serviceMap).filter(
     ([, svc]) => svc.includeInHealthCheck
   );
@@ -15,26 +15,26 @@ healthRouter.route("/").get(async (req: Request, res: Response) => {
   const checks = servicesToCheck.map(async ([name, { url }]) => {
     const start = Date.now();
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 3000); // faster timeout
 
     try {
+      const response = await fetch(`${url}/api/health`, {
+        method: "GET",
+        signal: controller.signal,
+      });
 
-      const response = await fetch(`${url}/api/health`, { signal: controller.signal });
-      const data = await response.json().catch(() => ({}));
       const duration = Date.now() - start;
 
       results[name] = {
-        status: response.ok ? "up" : "down",
+        status: response.status === 200 ? "up" : "down",
+        httpStatus: response.status,
         responseTimeMs: duration,
-        ...(data || {}),
       };
     } catch (err: any) {
       results[name] = {
         status: "down",
         error:
-          err.name === "AbortError"
-            ? "timeout"
-            : err.message || "connection failed",
+          err.name === "AbortError" ? "timeout" : err.message || "failed",
       };
     } finally {
       clearTimeout(timeout);
@@ -47,9 +47,7 @@ healthRouter.route("/").get(async (req: Request, res: Response) => {
     (svc: any) => svc.status === "down"
   );
 
-  const statusCode = anyDown ? 503 : 200;
-
-  res.status(statusCode).json({
+  res.status(anyDown ? 503 : 200).json({
     gateway: anyDown ? "degraded" : "up",
     timestamp: new Date().toISOString(),
     services: results,
