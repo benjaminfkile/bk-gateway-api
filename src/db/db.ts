@@ -12,12 +12,12 @@ export async function initDb(
 ): Promise<Knex> {
   if (db) return db;
 
-  const { username, password, host, proxy_url, port } =
-    dbSecrets;
+  const { username, password, host, /*proxy_url,*/ port } = dbSecrets;
 
-  const {db_name} = appSecrets
+  const { db_name } = appSecrets;
 
-  const dbUrl = environmnet !== "local" ? proxy_url : host;
+  // const dbUrl = environmnet !== "local" ? proxy_url : host;
+  const dbUrl = host; //proxy is currently disbaled, its exensive AF
 
   db = knex({
     client: "pg",
