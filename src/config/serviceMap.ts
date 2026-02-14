@@ -8,8 +8,7 @@ const baseServices: Record<
 > = {
   "portfolio-api": { port: 3001, includeInHealthCheck: true},
   // "bengrok-api": { port: 3002, includeInHealthCheck: false },
-  "wmsfo-api": { port: 3003, includeInHealthCheck: true, includeDevApi: true  },
-  "world-api": { port: 3004, includeInHealthCheck: false },
+  "wmsfo-api": { port: 3003, includeInHealthCheck: true, includeDevApi: true  }
 };
 
 export const serviceMap: Record<
