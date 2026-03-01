@@ -55,5 +55,11 @@ export const serviceMap: Record<
 
       return entries;
     })
-    .sort(([a], [b]) => b.length - a.length),
+    .sort(([a], [b]) => {
+      const baseA = a.replace(/-dev$/, "");
+      const baseB = b.replace(/-dev$/, "");
+      const baseCmp = baseA.localeCompare(baseB);
+      if (baseCmp !== 0) return baseCmp;
+      return b.length - a.length; // dev (longer) before prod within same service
+    }),
 );
