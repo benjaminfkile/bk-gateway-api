@@ -54,7 +54,7 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
   const proxyConfig: Options = {
     target: url,
     changeOrigin: true,
-    ws: true,
+    //ws: true,
     agent: url.startsWith("https") ? httpsAgent : httpAgent,
     proxyTimeout: 60000,
     timeout: 60000,
