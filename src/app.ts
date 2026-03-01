@@ -45,6 +45,10 @@ app.get("/api/gateway-info", (_req, res) => {
 const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 1000 });
 const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 1000 });
 
+// Store proxy instances for WebSocket upgrade handling
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const wsProxies: Record<string, any> = {};
+
 // Create proxies for all microservices
 for (const [name, { url }] of Object.entries(serviceMap)) {
   const proxyConfig: Options = {
@@ -76,7 +80,9 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
     logLevel: isLocal() ? "debug" : "warn",
   };
 
-  app.use(`/${name}`, createProxyMiddleware(proxyConfig));
+  const proxy = createProxyMiddleware(proxyConfig);
+  wsProxies[name] = proxy;
+  app.use(`/${name}`, proxy);
 }
 
 // Parse JSON only for non-proxied local routes

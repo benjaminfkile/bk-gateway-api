@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import http from "http";
 import { initDb } from "./src/db/db";
-import app from "./src/app";
+import app, { wsProxies } from "./src/app";
 import { getAppSecrets } from "./src/aws/getAppSecrets";
 import { getDBSecrets } from "./src/aws/getDBSecrets";
 import { IAPISecrets } from "./src/interfaces";
@@ -43,6 +43,12 @@ async function startGateway() {
     }
 
     const server = http.createServer(app);
+
+    // Register WebSocket upgrade handlers for all proxies
+    for (const proxy of Object.values(wsProxies)) {
+      server.on("upgrade", proxy.upgrade);
+    }
+
     server.listen(port, "0.0.0.0", () => {
       console.log(`[Gateway] Listening on port ${port} [env=${environment}]`);
     });
