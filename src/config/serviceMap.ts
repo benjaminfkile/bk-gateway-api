@@ -32,8 +32,8 @@ export const serviceMap: Record<
   string,
   { url: string; includeInHealthCheck: boolean }
 > = Object.fromEntries(
-  Object.entries(baseServices).flatMap(
-    ([name, { port, includeInHealthCheck, includeDevApi }]) => {
+  Object.entries(baseServices)
+    .flatMap(([name, { port, includeInHealthCheck, includeDevApi }]) => {
       const normalUrl = local
         ? `http://localhost:${port}`
         : `http://${name}:${port}`;
@@ -54,6 +54,6 @@ export const serviceMap: Record<
       }
 
       return entries;
-    },
-  ),
+    })
+    .sort(([a], [b]) => b.length - a.length),
 );
