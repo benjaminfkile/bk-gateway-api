@@ -44,10 +44,24 @@ async function startGateway() {
 
     const server = http.createServer(app);
 
-    // Register WebSocket upgrade handlers for all proxies
-    for (const proxy of Object.values(wsProxies)) {
-      server.on("upgrade", proxy.upgrade);
-    }
+    // Register WebSocket upgrade handler with path-based dispatch
+    const sortedProxyEntries = Object.entries(wsProxies).sort(([a], [b]) => {
+      const baseA = a.replace(/-dev$/, "");
+      const baseB = b.replace(/-dev$/, "");
+      const baseCmp = baseA.localeCompare(baseB);
+      if (baseCmp !== 0) return baseCmp;
+      return b.length - a.length;
+    });
+
+    server.on("upgrade", (req, socket, head) => {
+      for (const [name, proxy] of sortedProxyEntries) {
+        if (req.url?.startsWith(`/${name}`)) {
+          proxy.upgrade(req, socket, head);
+          return;
+        }
+      }
+      socket.destroy();
+    });
 
     server.listen(port, "0.0.0.0", () => {
       console.log(`[Gateway] Listening on port ${port} [env=${environment}]`);
