@@ -26,6 +26,11 @@ const baseServices: Record<
     includeInHealthCheck: true,
     includeDevApi: true,
   },
+  "lease-tracker-api": {
+    port: 3005,
+    includeInHealthCheck: true,
+    includeDevApi: true,
+  },
 };
 
 export const serviceMap: Record<
