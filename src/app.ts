@@ -77,6 +77,14 @@ for (const [name, { url }] of Object.entries(serviceMap)) {
       }
     },
     pathRewrite: (path) => path.replace(new RegExp(`^/${name}`), ""),
+    on: {
+      proxyRes: (proxyRes) => {
+        const location = proxyRes.headers["location"];
+        if (location && location.startsWith("/")) {
+          proxyRes.headers["location"] = `/${name}${location}`;
+        }
+      },
+    },
     logLevel: isLocal() ? "debug" : "warn",
   };
 
