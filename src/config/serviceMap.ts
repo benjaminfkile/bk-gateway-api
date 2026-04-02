@@ -28,7 +28,7 @@ const baseServices: Record<
   },
   "lease-tracker-api": {
     port: 3005,
-    includeInHealthCheck: false,
+    includeInHealthCheck: true,
     includeDevApi: true,
   },
 };
