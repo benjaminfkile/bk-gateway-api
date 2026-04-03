@@ -5,6 +5,8 @@ export interface IAPISecrets {
   db_name: string
   master_password: string
   master_password_hash: string
+  redis_host: string
+  redis_port: string
 }
 
 export interface IDBSecrets {

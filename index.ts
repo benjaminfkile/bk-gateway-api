@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import http from "http";
 import { initDb } from "./src/db/db";
+import { initRedis } from "./src/db/redis";
 import app, { wsProxies } from "./src/app";
 import { getAppSecrets } from "./src/aws/getAppSecrets";
 import { getDBSecrets } from "./src/aws/getDBSecrets";
@@ -30,6 +31,12 @@ async function startGateway() {
       ? "local"
       : (appSecrets.node_env as TNodeEnviromnent) || "local";
     app.set("environment", environment);
+
+    const redisPort = Number(appSecrets.redis_port);
+    if (isNaN(redisPort)) {
+      throw new Error(`[Gateway] Invalid redis_port value: "${appSecrets.redis_port}"`);
+    }
+    initRedis(appSecrets.redis_host, redisPort);
 
     await initDb(dbSecrets, appSecrets, environment);
 
