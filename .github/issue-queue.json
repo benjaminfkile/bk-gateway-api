@@ -1,8 +1,6 @@
 {
   "description": "Ordered task queue for in-place container deploy system. Manual Secrets Manager update must happen first. Then: Redis connection, DeployService, DeploySubscriberService, /api/deploy endpoints, existing code tests, watchdog sidecar.",
   "queue": [
-    7,
-    1,
     3,
     2,
     4,
