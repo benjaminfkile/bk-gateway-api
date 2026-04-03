@@ -1,0 +1,10 @@
+{
+  "description": "Ordered task queue for in-place container deploy system. Adds Redis pub/sub coordination, DeployService (Docker socket), DeploySubscriberService, /api/deploy endpoints, and the watchdog sidecar for gateway self-deploys.",
+  "queue": [
+    1,
+    3,
+    2,
+    4,
+    5
+  ]
+}
