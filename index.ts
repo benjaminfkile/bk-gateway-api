@@ -11,6 +11,7 @@ import { TNodeEnviromnent } from "./src/types";
 import { isLocal } from "./src/utils/isLocal";
 import instanceMetadataService from "./src/services/instanceMetadataService";
 import leaderElectionService from "./src/services/leaderElectionService";
+import deploySubscriberService from "./src/services/deploySubscriberService";
 
 const port = parseInt(process.env.PORT ?? "3000");
 
@@ -44,6 +45,7 @@ async function startGateway() {
     const { instanceId, publicIp , privateIp} = instanceMetadataService;
     if (instanceId && publicIp && privateIp) {
       await leaderElectionService.init(instanceId, publicIp, privateIp);
+      deploySubscriberService.init(appSecrets.redis_host, Number(appSecrets.redis_port), instanceId);
     } else {
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       console.error("leaderElectionService init in index.ts if broken")
