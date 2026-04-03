@@ -1,22 +1,18 @@
 import { LogLevel, TNodeEnviromnent } from "./types";
 
 export interface IAPISecrets {
-  node_env: string
-  db_name: string
-  master_password: string
-  master_password_hash: string
-  redis_host: string
-  redis_port: string
+  node_env: string;
+  db_name: string;
+  master_password: string;
+  master_password_hash: string;
+  redis_host: string;
+  redis_port: string;
+  db_host: string;
 }
 
 export interface IDBSecrets {
   username: string;
   password: string;
-  engine: "postgres";
-  host: string;
-  proxy_url: string;
-  port: 5432;
-  dbInstanceIdentifier: string;
 }
 
 export interface IDBHealth {
@@ -34,9 +30,9 @@ export interface IEC2Launch {
   id?: number;
   instance_id: string;
   launched_at?: string;
-  is_leader: boolean
-  public_ip: string
-  private_ip: string
+  is_leader: boolean;
+  public_ip: string;
+  private_ip: string;
 }
 
 export interface IInstanceMessage {
@@ -71,7 +67,7 @@ export interface IServiceLogSettings {
   id?: number;
   service_id: number;
   enabled: boolean;
-  min_level: LogLevel
+  min_level: LogLevel;
   updated_at?: Date;
 }
 
@@ -79,7 +75,7 @@ export interface IAboutMe {
   amILeader: boolean;
   myInstanceId: string;
   publicIp: string;
-  privateIp: string
+  privateIp: string;
 }
 
 export interface IDeployMessage {

@@ -8,16 +8,16 @@ let db: Knex | null = null;
 export async function initDb(
   dbSecrets: IDBSecrets,
   appSecrets: IAPISecrets,
-  environmnet: TNodeEnviromnent
+  // environmnet: TNodeEnviromnent,
 ): Promise<Knex> {
   if (db) return db;
 
-  const { username, password, host, /*proxy_url,*/ port } = dbSecrets;
+  const { username, password } = dbSecrets;
 
-  const { db_name } = appSecrets;
+  const { db_name, db_host } = appSecrets;
 
   // const dbUrl = environmnet !== "local" ? proxy_url : host;
-  const dbUrl = host; //proxy is currently disbaled, its exensive AF
+  const dbUrl = db_host; //proxy is currently disbaled, its exensive AF
 
   db = knex({
     client: "pg",
@@ -26,7 +26,7 @@ export async function initDb(
       user: username,
       password: password,
       database: db_name,
-      port: port,
+      port: 5432,
       ssl: { rejectUnauthorized: false },
     },
   });

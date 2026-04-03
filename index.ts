@@ -35,20 +35,26 @@ async function startGateway() {
 
     const redisPort = Number(appSecrets.redis_port);
     if (isNaN(redisPort)) {
-      throw new Error(`[Gateway] Invalid redis_port value: "${appSecrets.redis_port}"`);
+      throw new Error(
+        `[Gateway] Invalid redis_port value: "${appSecrets.redis_port}"`,
+      );
     }
     initRedis(appSecrets.redis_host, redisPort);
 
-    await initDb(dbSecrets, appSecrets, environment);
+    await initDb(dbSecrets, appSecrets);
 
     await instanceMetadataService.init();
-    const { instanceId, publicIp , privateIp} = instanceMetadataService;
+    const { instanceId, publicIp, privateIp } = instanceMetadataService;
     if (instanceId && publicIp && privateIp) {
       await leaderElectionService.init(instanceId, publicIp, privateIp);
-      deploySubscriberService.init(appSecrets.redis_host, Number(appSecrets.redis_port), instanceId);
+      deploySubscriberService.init(
+        appSecrets.redis_host,
+        Number(appSecrets.redis_port),
+        instanceId,
+      );
     } else {
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      console.error("leaderElectionService init in index.ts if broken")
+      console.error("leaderElectionService init in index.ts if broken");
     }
 
     const server = http.createServer(app);
