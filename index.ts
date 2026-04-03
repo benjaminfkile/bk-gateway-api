@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import http from "http";
 import { initDb } from "./src/db/db";
-import { initRedis } from "./src/db/redis";
+// import { initRedis } from "./src/db/redis";
 import app, { wsProxies } from "./src/app";
 import { getAppSecrets } from "./src/aws/getAppSecrets";
 import { getDBSecrets } from "./src/aws/getDBSecrets";
@@ -11,7 +11,7 @@ import { TNodeEnviromnent } from "./src/types";
 import { isLocal } from "./src/utils/isLocal";
 import instanceMetadataService from "./src/services/instanceMetadataService";
 import leaderElectionService from "./src/services/leaderElectionService";
-import deploySubscriberService from "./src/services/deploySubscriberService";
+// import deploySubscriberService from "./src/services/deploySubscriberService";
 
 const port = parseInt(process.env.PORT ?? "3000");
 
@@ -39,7 +39,7 @@ async function startGateway() {
         `[Gateway] Invalid redis_port value: "${appSecrets.redis_port}"`,
       );
     }
-    initRedis(appSecrets.redis_host, redisPort);
+    // initRedis(appSecrets.redis_host, redisPort);
 
     await initDb(dbSecrets, appSecrets);
 
@@ -47,11 +47,11 @@ async function startGateway() {
     const { instanceId, publicIp, privateIp } = instanceMetadataService;
     if (instanceId && publicIp && privateIp) {
       await leaderElectionService.init(instanceId, publicIp, privateIp);
-      deploySubscriberService.init(
-        appSecrets.redis_host,
-        Number(appSecrets.redis_port),
-        instanceId,
-      );
+      // deploySubscriberService.init(
+      //   appSecrets.redis_host,
+      //   Number(appSecrets.redis_port),
+      //   instanceId,
+      // );
     } else {
       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       console.error("leaderElectionService init in index.ts if broken");
