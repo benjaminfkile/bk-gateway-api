@@ -81,3 +81,16 @@ export interface IAboutMe {
   publicIp: string;
   privateIp: string
 }
+
+export interface IDeployMessage {
+  service: string;
+  imageUri: string;
+  instanceId: string;
+}
+
+export interface IDeployResult {
+  service: string;
+  imageUri: string;
+  success: boolean;
+  error?: string;
+}
