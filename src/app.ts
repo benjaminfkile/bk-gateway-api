@@ -13,6 +13,7 @@ import healthRouter from "./routers/healthRouter";
 import aboutMeRouter from "./routers/aboutMeRouter";
 import ec2LaunchRouter from "./routers/ec2LaunchRouter";
 import utilsRouter from "./routers/utilsRouter";
+import deployRouter from "./routers/deployRouter";
 import protectedRoute from "./middleware/protectedRoute";
 
 const app = express();
@@ -31,6 +32,7 @@ app.get("/", (_req, res) => res.send("/"));
 app.use("/api/health", healthRouter);
 app.use("/api/about-me", protectedRoute(), aboutMeRouter);
 app.use("/api/ec2-launch", protectedRoute(), ec2LaunchRouter);
+app.use("/api/deploy", protectedRoute(), deployRouter);
 app.use("/api/utils", utilsRouter);
 
 app.get("/api/gateway-info", (_req, res) => {
