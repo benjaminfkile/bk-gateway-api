@@ -31,6 +31,11 @@ const baseServices: Record<
     includeInHealthCheck: true,
     includeDevApi: true,
   },
+  "autoqueue-api": {
+    port: 3006,
+    includeInHealthCheck: false,
+    includeDevApi: false,
+  },
   "gateway-downstream-node-starter": {
     port: 3050,
     includeInHealthCheck: true,
