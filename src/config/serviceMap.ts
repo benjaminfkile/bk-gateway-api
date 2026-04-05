@@ -31,6 +31,11 @@ const baseServices: Record<
     includeInHealthCheck: true,
     includeDevApi: true,
   },
+  "gateway-downstream-node-starter": {
+    port: 3050,
+    includeInHealthCheck: false,
+    includeDevApi: true,
+  },
 };
 
 export const serviceMap: Record<
