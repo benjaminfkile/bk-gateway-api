@@ -33,7 +33,7 @@ const baseServices: Record<
   },
   "gateway-downstream-node-starter": {
     port: 3050,
-    includeInHealthCheck: false,
+    includeInHealthCheck: true,
     includeDevApi: true,
   },
 };
