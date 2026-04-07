@@ -11,11 +11,6 @@ const baseServices: Record<
     includeInHealthCheck: true,
     includeDevApi: false,
   },
-  // "bengrok-api": {
-  //   port: 3002,
-  //   includeInHealthCheck: false,
-  //   includeDevApi: false,
-  // },
   "wmsfo-api": {
     port: 3003,
     includeInHealthCheck: true,
@@ -28,17 +23,12 @@ const baseServices: Record<
   },
   "lease-tracker-api": {
     port: 3005,
-    includeInHealthCheck: true,
-    includeDevApi: true,
-  },
-  "autoqueue-api": {
-    port: 3006,
     includeInHealthCheck: false,
-    includeDevApi: false,
+    includeDevApi: true,
   },
   "gateway-downstream-node-starter": {
     port: 3050,
-    includeInHealthCheck: true,
+    includeInHealthCheck: false,
     includeDevApi: true,
   },
 };
