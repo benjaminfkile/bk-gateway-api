@@ -26,9 +26,9 @@ const baseServices: Record<
     includeInHealthCheck: false,
     includeDevApi: true,
   },
-  "gateway-downstream-node-starter": {
-    port: 3050,
-    includeInHealthCheck: false,
+  "file-manager-api": {
+    port: 3007,
+    includeInHealthCheck: true,
     includeDevApi: true,
   },
 };
