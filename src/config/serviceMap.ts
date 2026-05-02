@@ -18,7 +18,7 @@ const baseServices: Record<
   },
   "3gixhub-api": {
     port: 3004,
-    includeInHealthCheck: true,
+    includeInHealthCheck: false,
     includeDevApi: true,
   },
   "lease-tracker-api": {
