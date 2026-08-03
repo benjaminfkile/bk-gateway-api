@@ -16,16 +16,6 @@ const baseServices: Record<
     includeInHealthCheck: true,
     includeDevApi: true,
   },
-  "3gixhub-api": {
-    port: 3004,
-    includeInHealthCheck: false,
-    includeDevApi: true,
-  },
-  "lease-tracker-api": {
-    port: 3005,
-    includeInHealthCheck: false,
-    includeDevApi: true,
-  },
   "file-manager-api": {
     port: 3007,
     includeInHealthCheck: true,

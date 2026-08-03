@@ -15,12 +15,12 @@ describe("serviceMap", () => {
 
     it("uses localhost URLs with the correct port for each service", () => {
       expect(serviceMap["portfolio-api"].url).toBe("http://localhost:3001");
-      expect(serviceMap["lease-tracker-api"].url).toBe("http://localhost:3005");
+      expect(serviceMap["file-manager-api"].url).toBe("http://localhost:3007");
     });
 
     it("generates dev variant URLs at port + 1000 for services with includeDevApi: true", () => {
-      expect(serviceMap["lease-tracker-api-dev"].url).toBe(
-        "http://localhost:4005"
+      expect(serviceMap["file-manager-api-dev"].url).toBe(
+        "http://localhost:4007"
       );
       expect(serviceMap["wmsfo-api-dev"].url).toBe("http://localhost:4003");
     });
@@ -40,14 +40,14 @@ describe("serviceMap", () => {
       expect(serviceMap["portfolio-api"].url).toBe(
         "http://portfolio-api:3001"
       );
-      expect(serviceMap["lease-tracker-api"].url).toBe(
-        "http://lease-tracker-api:3005"
+      expect(serviceMap["file-manager-api"].url).toBe(
+        "http://file-manager-api:3007"
       );
     });
 
     it("generates dev variant URLs with -dev suffix at port + 1000", () => {
-      expect(serviceMap["lease-tracker-api-dev"].url).toBe(
-        "http://lease-tracker-api-dev:4005"
+      expect(serviceMap["file-manager-api-dev"].url).toBe(
+        "http://file-manager-api-dev:4007"
       );
     });
   });
@@ -64,8 +64,7 @@ describe("serviceMap", () => {
 
     it("services with includeDevApi: true have a -dev entry", () => {
       expect(serviceMap).toHaveProperty("wmsfo-api-dev");
-      expect(serviceMap).toHaveProperty("3gixhub-api-dev");
-      expect(serviceMap).toHaveProperty("lease-tracker-api-dev");
+      expect(serviceMap).toHaveProperty("file-manager-api-dev");
     });
 
     it("services with includeDevApi: false have no -dev entry", () => {
